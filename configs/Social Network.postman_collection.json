@@ -1,0 +1,72 @@
+{
+	"info": {
+		"_postman_id": "3af1d15f-d757-47d8-82d8-e62c0c5bf410",
+		"name": "Social Network",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "37589008"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "Amagana",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "amagana@kinal.edu.gt",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Chinito2,000",
+									"type": "text"
+								},
+								{
+									"key": "profilePicture",
+									"type": "file",
+									"src": "/C:/Users/Informatica/Pictures/images.jpg"
+								},
+								{
+									"key": "name",
+									"value": "Angel",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:3000/social-network/v1/auth/register"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\" : \"Amagana\",\r\n    \"password\" : \"Chinito2,000\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/social-network/v1/auth/login"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

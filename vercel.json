@@ -1,16 +1,30 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "index.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/index.js"
-      }
-    ]
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.js"
+    }
+  ],
+  "env": {
+    "PORT": "3000",
+    "API_KEY": "@api_key",
+    "AUTH_DOMAIN": "@auth_domain",
+    "PROJECT_ID": "@project_id",
+    "STORAGE_BUCKET": "@storage_bucket",
+    "MESSAGING_SENDER_ID": "@messaging_sender_id",
+    "APP_ID": "@app_id",
+    "MEASUREMENT_ID": "@measurement_id",
+    "JWT_SECRET": "@jwt_secret",
+    "FIREBASE_PRIVATE_KEY": "@firebase_private_key",
+    "FIREBASE_CLIENT_EMAIL": "@firebase_client_email",
+    "FIREBASE_CLIENT_ID": "@firebase_client_id",
+    "FIREBASE_CLIENT_X509_CERT_URL": "@firebase_client_x509_cert_url"
   }
-  
+}

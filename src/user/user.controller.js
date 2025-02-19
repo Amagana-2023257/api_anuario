@@ -1,5 +1,7 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { firestore } from "../../configs/firebase.js"; // Ya tienes firestore exportado desde firebase.js
+
 
 // Obtener todos los usuarios de Firestore
 export const getAllUsers = async (req, res) => {
@@ -52,22 +54,36 @@ export const getUserById = async (req, res) => {
     }
 };
 
-// Actualizar un usuario
 export const updateUser = async (req, res) => {
-    const { userId } = req.params; // El UID del usuario a actualizar
-    const { name, surname, email } = req.body;
-    let profilePicture = req.file ? req.file.filename : null;
+    const { userId } = req.params;
+    const {
+        name,
+        surname,
+        email,
+        carnet,
+        seccionAcademica,
+        seccionTecnica,
+        frase,
+        role,
+        status,
+    } = req.body;
 
-    // Validar que los datos necesarios no sean undefined
-    if (!name || !surname || !email) {
+    let profilePicture = req.file ? req.file.path : req.body.profilePicture;
+
+    // Si `profilePicture` llega como un array, extraer solo la URL
+    if (Array.isArray(profilePicture) && profilePicture.length > 0) {
+        profilePicture = profilePicture[0]; 
+    }
+
+    if (!name || !surname || !email || !carnet || !seccionAcademica || !seccionTecnica) {
         return res.status(400).json({
-            message: "Todos los campos (name, surname, email) son obligatorios.",
+            message: "Todos los campos obligatorios deben estar completos.",
         });
     }
 
     try {
-        const userRef = doc(firestore, "users", userId); // Referencia al documento de usuario en Firestore
-        const userDoc = await getDoc(userRef); // Obtener el documento para asegurarse de que exista
+        const userRef = doc(firestore, "users", userId);
+        const userDoc = await getDoc(userRef);
 
         if (!userDoc.exists()) {
             return res.status(404).json({
@@ -75,30 +91,37 @@ export const updateUser = async (req, res) => {
             });
         }
 
-        // Actualizar los datos del usuario
+        const currentUserData = userDoc.data();
+
         const updateData = {
             name,
             surname,
             email,
-            profilePicture: profilePicture || null, // Si no se envía, establecer como null
+            carnet,
+            seccionAcademica,
+            seccionTecnica,
+            frase,
+            role: role || currentUserData.role,
+            status: status !== undefined ? status : currentUserData.status,
+            profilePicture: profilePicture || currentUserData.profilePicture, // Actualiza la imagen si se envió una nueva
             updatedAt: new Date().toISOString(),
         };
 
-        // Realizar la actualización solo si se pasa información válida
         await updateDoc(userRef, updateData);
 
         return res.status(200).json({
             message: "Usuario actualizado exitosamente",
-            user: { name, surname, email, profilePicture },
+            user: updateData,
         });
     } catch (error) {
-        console.error(error);
+        console.error("Error al actualizar usuario:", error);
         return res.status(500).json({
             message: "Error al actualizar usuario",
             error: error.message,
         });
     }
 };
+
 
 
 // Desactivar un usuario (cambiar su status a false)
@@ -128,6 +151,34 @@ export const deactivateUser = async (req, res) => {
         console.error(error);
         return res.status(500).json({
             message: "Error al desactivar usuario",
+            error: error.message,
+        });
+    }
+};
+
+
+
+
+export const resetPassword = async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({
+            message: "El correo es obligatorio.",
+        });
+    }
+
+    try {
+        const auth = getAuth();
+        await sendPasswordResetEmail(auth, email);
+
+        return res.status(200).json({
+            message: "Se ha enviado un enlace de recuperación a tu correo.",
+        });
+    } catch (error) {
+        console.error("Error al enviar correo de recuperación:", error);
+        return res.status(500).json({
+            message: "Error al procesar la solicitud",
             error: error.message,
         });
     }

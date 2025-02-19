@@ -1,33 +1,26 @@
-import multer from "multer";
-import { dirname, extname, join } from "path";
-import { fileURLToPath } from "url"
+// multer-uploads.js
+import multer from 'multer';
 
-const CURRENT_DIR = dirname(fileURLToPath(import.meta.url))
-const MIMETYPES = ["image/png", "image/jpg", "image/jpeg"]
-const MAX_SIZE = 100000000
+// Tipos de archivo permitidos
+const MIMETYPES = ["image/png", "image/jpg", "image/jpeg"];
+const MAX_SIZE = 10000000; // 10MB
 
-const createMulterConfig = (destinationFolder) => {
-    return multer({
-        storage: multer.diskStorage({
-            destination: (req, file, cb) => {
-                const fullPath = join(CURRENT_DIR, destinationFolder)
-                req.filePath = fullPath
-                cb(null, fullPath)
-            },
-            filename: (req, file, cb) => {
-                const fileExtension = extname(file.originalname)
-                const fileName = file.originalname.split(fileExtension)[0]
-                cb(null, `${fileName}-${Date.now()}${fileExtension}`)
-            }   
-        }),
-        fileFilter:(req, file, cb) => {
-            if(MIMETYPES.includes(file.mimetype)) cb(null,true)
-            else cb(new Error(`Solamente se aceptan archivos de los siguients tipos: ${MIMETYPES.join(" ")}`))
-        },
-        limits:{
-            fileSize: MAX_SIZE
-        }
-    })
-}
+// Configuración de Multer solo para validar el archivo
+const createMulterConfig = () => {
+  return multer({
+    storage: multer.memoryStorage(), // Usamos memoria en lugar de almacenamiento en disco
+    fileFilter: (req, file, cb) => {
+      if (MIMETYPES.includes(file.mimetype)) {
+        cb(null, true); // Aceptamos el archivo
+      } else {
+        console.log(file.mimetype)
+        cb(new Error(`Solamente se aceptan archivos de los siguientes tipos: ${MIMETYPES.join(" ")}`));
+      }
+    },
+    limits: {
+      fileSize: MAX_SIZE, // Límite de tamaño de archivo
+    },
+  });
+};
 
-export const uploadProfilePicture = createMulterConfig("../../public/uploads/profile-pictures")
+export const uploadProfilePicture = createMulterConfig(); // Exportamos el middleware de multer

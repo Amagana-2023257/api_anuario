@@ -1,18 +1,61 @@
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import { doc, updateDoc, collection, getDoc, query, where, getDocs } from "firebase/firestore";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { firestore } from "../../configs/firebase.js"; // Ya tienes firestore exportado desde firebase.js
+import { uploadToCloudinary } from "../middlewares/uploadPhoto.js";
 
-
-// Obtener todos los usuarios de Firestore
-export const getAllUsers = async (req, res) => {
+export const getAllUsersFull = async (req, res) => {
     try {
-        // Obtener todos los usuarios de Firestore
-        const usersSnapshot = await getDocs(collection(firestore, 'users'));
+        // Obtén la colección completa de usuarios sin ningún filtro
+        const usersSnapshot = await getDocs(collection(firestore, "users"));
         const users = [];
 
-        // Iterar sobre los documentos y agregar los datos de cada usuario
+        // Iterar sobre todos los documentos y obtener todos los campos
+        usersSnapshot.forEach((docSnap) => {
+            // Combina el id con los datos del documento
+            users.push({
+                id: docSnap.id,
+                ...docSnap.data(),
+            });
+        });
+
+        return res.status(200).json({
+            message: "Usuarios (completos) obtenidos exitosamente",
+            users,
+        });
+    } catch (error) {
+        console.error("Error al obtener todos los usuarios (completos):", error);
+        return res.status(500).json({
+            message: "Error al obtener usuarios (completos)",
+            error: error.message,
+        });
+    }
+};
+
+// Obtener todos los usuarios de Firestore
+
+export const getAllUsers = async (req, res) => {
+    try {
+        // Crear una consulta para obtener solo documentos con role "USER"
+        const usersQuery = query(
+            collection(firestore, 'users'),
+            where('role', '==', 'USER')
+        );
+        const usersSnapshot = await getDocs(usersQuery);
+        const users = [];
+
+        // Iterar sobre los documentos y extraer solo los campos requeridos
         usersSnapshot.forEach((doc) => {
-            users.push({ id: doc.id, ...doc.data() });
+            const { name, surname, carnet, seccionAcademica, seccionTecnica, frase, profilePicture } = doc.data();
+            users.push({
+                id: doc.id,
+                name,
+                surname,
+                carnet,
+                seccionAcademica,
+                seccionTecnica,
+                frase,
+                profilePicture
+            });
         });
 
         return res.status(200).json({
@@ -27,6 +70,7 @@ export const getAllUsers = async (req, res) => {
         });
     }
 };
+
 
 // Obtener un usuario por su UID (ID en Firestore)
 export const getUserById = async (req, res) => {
@@ -68,11 +112,13 @@ export const updateUser = async (req, res) => {
         status,
     } = req.body;
 
-    let profilePicture = req.file ? req.file.path : req.body.profilePicture;
+    let profilePicture;
 
-    // Si `profilePicture` llega como un array, extraer solo la URL
-    if (Array.isArray(profilePicture) && profilePicture.length > 0) {
-        profilePicture = profilePicture[0]; 
+    // Si se envía un archivo, se sube a Cloudinary para obtener la URL
+    if (req.file) {
+        profilePicture = await uploadToCloudinary(req);
+    } else {
+        profilePicture = req.body.profilePicture;
     }
 
     if (!name || !surname || !email || !carnet || !seccionAcademica || !seccionTecnica) {
@@ -103,7 +149,7 @@ export const updateUser = async (req, res) => {
             frase,
             role: role || currentUserData.role,
             status: status !== undefined ? status : currentUserData.status,
-            profilePicture: profilePicture || currentUserData.profilePicture, // Actualiza la imagen si se envió una nueva
+            profilePicture: profilePicture || currentUserData.profilePicture,
             updatedAt: new Date().toISOString(),
         };
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllUsers,getUserById,updateUser,deactivateUser, resetPassword} from "./user.controller.js";
+import { getAllUsers,getUserById,updateUser,deactivateUser, resetPassword, getAllUsersFull} from "./user.controller.js";
 import { getUserByIdValidator, updateUserValidator,deleteUserValidator } from "../middlewares/user-validators.js";
 import { validateJWT } from "../middlewares/validate-jwt.js";
 import { hasRoles } from "../middlewares/validate-roles.js";
@@ -7,6 +7,8 @@ import { uploadProfilePicture } from "../middlewares/multer-uploads.js"
 
 const router = Router();
 
+// Nueva ruta para obtener TODOS los usuarios con todos sus datos
+router.get("/full", validateJWT, hasRoles("ADMIN"), getAllUsersFull);
 
 router.get("/", getAllUsers);
 
@@ -14,7 +16,7 @@ router.get("/", getAllUsers);
 router.get("/:userId", validateJWT, hasRoles("ADMIN", "USER"), getUserById);
 
 // Actualizar un usuario
-router.put("/updateUser/:userId", validateJWT, hasRoles("ADMIN", "USER"),uploadProfilePicture.single("profilePicture"),  updateUserValidator, updateUser);
+router.put("/updateUser/:userId",uploadProfilePicture.single("profilePicture"),  validateJWT, hasRoles("ADMIN", "USER"),  updateUserValidator, updateUser);
 
 // Eliminar un usuario
 router.delete("/:userId", validateJWT, hasRoles("ADMIN"), deleteUserValidator, deactivateUser);

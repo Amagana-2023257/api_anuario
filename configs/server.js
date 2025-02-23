@@ -7,6 +7,7 @@ import { swaggerDocs, swaggerUi } from "./swagger.js";
 import apiLimiter from "../src/middlewares/rate-limit-validator.js";
 import authRoutes from "../src/auth/auth.routes.js";
 import userRoutes from "../src/user/user.routes.js";
+import scheduleRoutes from "../src/schedule/schedule.routes.js";
 import { initializeApp, cert } from 'firebase-admin/app';
 import dotenv from 'dotenv';
 import { cloudinary } from './cloudinary.js'; // Importar la conexión a Cloudinary
@@ -36,6 +37,7 @@ const middlewares = (app) => {
 const routes = (app) => {
   app.use("/anuario/v1/auth", authRoutes);
   app.use("/anuario/v1/user", userRoutes);
+  app.use("/anuario/v1/schedule", scheduleRoutes);
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 };
 
